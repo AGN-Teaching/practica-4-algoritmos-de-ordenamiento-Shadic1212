@@ -26,9 +26,11 @@ En general, podemos observar cómo en los resultados los tiempos de ejecución v
 El paso No.6 de la práctica nos dice: "Para tener más información, es conveniente graficar los resultados anteriores, comparando el tiempo de ejecución de cada algoritmo."
 
 n=5
+
 ![image](https://github.com/AGN-Teaching/practica-4-algoritmos-de-ordenamiento-Shadic1212/assets/89264651/cf688de8-70a3-4fe1-a2ff-5fefa942e3d7)
 
 n=1000
+
 ![GrafiaTiempos](https://github.com/AGN-Teaching/practica-4-algoritmos-de-ordenamiento-Shadic1212/assets/89264651/ca84951a-48c0-42f6-a191-822d3a89ae5d)
 
 No incluyo gráficas con un n mayor a 10000 porque mi computadora no fue capaz de realizar los ordenamientos.
