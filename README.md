@@ -46,4 +46,5 @@ Asimismo, con el pasar del tiempo y observando los resultados de las ejecuciones
 ## Conclusiones
 
 Después de llevar a cabo esta práctica, puedo concluir que los algoritmos de ordenamiento que nos dan son para darnos cuenta de que hay algoritmos más eficaces que otros para este tipo de ejercicios. Esto me lleva a pensar que al realizar un proyecto de programación siempre se debe buscar la mayor eficacia posible para evitar que las computadoras se estanquen buscando la máxima eficacia posible, hablo de la famosa "optimización".
+![image](https://github.com/AGN-Teaching/practica-4-algoritmos-de-ordenamiento-Shadic1212/assets/89264651/36ff975f-d9cf-4701-aebd-0354ba76961b)
 
