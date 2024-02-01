@@ -16,17 +16,14 @@ Al comenzar a calcular estos resultador para cada valor de n nos podemos dar cue
 
 ![image](https://github.com/AGN-Teaching/practica-4-algoritmos-de-ordenamiento-Shadic1212/assets/89264651/13c45171-8e6a-4095-8d0d-d4969bcfc9f5)
 
-
-
-
-
-
-
-
+En general, podemos observar como en los resultados los tiempos de ejecucion van aumentando poco a poco, esto es debido a que el programa tiene que ejecutar una mayor cantidad de algoritmos de ordenamiento, causando que se demore mas tiempo cada vez.
 
 
 ## Gráficas del resumen de los resultados (paso 6 del Procedimiento).
 El paso No.6 de la practica nos dice: "Para tener más información, es conveniente graficar los resultados anteriores, comparando el tiempo de ejecución de cada algoritmo."
+
+n=1000
+![GrafiaTiempos](https://github.com/AGN-Teaching/practica-4-algoritmos-de-ordenamiento-Shadic1212/assets/89264651/ca84951a-48c0-42f6-a191-822d3a89ae5d)
 
 
 
