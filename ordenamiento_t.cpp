@@ -1,160 +1,138 @@
 #include <iostream>
-#include <cstdlib>
-#include <string>
-#include <ctime>
+#include <vector>
 #include <chrono>
-
+#include <algorithm>
+#include <random>
+#include <cmath>
+#include <fstream>  // Incluimos la biblioteca para trabajar con archivos
 #include "ordenamiento_t.h"
+#include "ordenamiento_rec_t.h"
 
-using namespace std;
-using namespace std::chrono;
+int main(int argc, char* argv[]) {
+    // Agregamos la declaración de la variable start_program
+    auto start_program = std::chrono::steady_clock::now();
 
-
-duration<double> crear_arreglo(int *A, int TAM_ARREGLO, int RANGO_MAX) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    for (int i = 0; i < TAM_ARREGLO; i++) {
-        int x = rand() % RANGO_MAX;
-        A[i] = x;
+    if (argc != 3) {
+        std::cout << "Uso: " << argv[0] << " <n> <m>\n";
+        return 1;
     }
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
 
+    int n = std::stoi(argv[1]);
+    int m = std::stoi(argv[2]);
 
-duration<double> ordenar_insertion_sort(int* A, int TAM_ARREGLO) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    insertion_sort(A, TAM_ARREGLO);
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, 10 * n);
 
+    std::ofstream archivo_salida("resultados.txt");  // Abrimos el archivo para escritura
+    archivo_salida << "#Ejec.\tis_t\tss_t\tbs_t\tms_t\tqs_t\n";  // Encabezado del archivo
 
-duration<double> ordenar_selection_sort(int* A, int TAM_ARREGLO) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    selection_sort(A, TAM_ARREGLO);
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
+    std::vector<double> tiempos_insertion;
+    std::vector<double> tiempos_selection;
+    std::vector<double> tiempos_bubble;
+    std::vector<double> tiempos_merge;
+    std::vector<double> tiempos_quicksort;
 
-
-duration<double> ordenar_bubblesort(int* A, int TAM_ARREGLO) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    bubblesort(A, TAM_ARREGLO);
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
-
-
-int* copiar_arreglo(int A[], int n) {
-    int *aux = new int[n];
-    for (int i = 0; i < n; i++) {
-        aux[i] = A[i];
-    }
-    return aux;
-}
-
-
-void mostrar_arreglo(int *A, int n) {
-    for (int i = 0; i < n; i++) {
-        cout << A[i] << " ";
-    }
-    cout << endl;
-}
-
-
-void experimentos(int tam, int reps, bool is, bool ss, bool bs) {
-
-    int TAM_ARREGLO = tam;
-    int RANGO_MAX = 10 * TAM_ARREGLO;
-    int REPETICIONES = reps;
-    double t_prom_is = 0.0;
-    double t_prom_ss = 0.0;
-    double t_prom_bs = 0.0;
-
-    srand((unsigned) time(0));
-    for (int i = 0; i < REPETICIONES; i++) {
-        cout << "*** REPETICION " << i+1 << " ***" << endl;
-        int *A = new int[TAM_ARREGLO];
-        duration<double> tiempo;
-
-        // Arreglo aleatorio
-        cout << "Creando arreglo aleatorio de tamaño " << TAM_ARREGLO << "... ";
-        tiempo = crear_arreglo(A, TAM_ARREGLO, RANGO_MAX);
-        cout << "\tCreado. ";
-        cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-
-        int *aux;
-        if (is) {
-            aux = copiar_arreglo(A, TAM_ARREGLO);
-            cout << "Iniciando ordenamiento con INSERTION SORT... ";
-            tiempo = ordenar_insertion_sort(aux, TAM_ARREGLO);
-            cout << "\tOrdenado. ";
-            cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-            t_prom_is = t_prom_is + tiempo.count();
-            delete [] aux;
+    for (int i = 0; i < m; i++) {
+        std::vector<int> A(n);
+        for (int &a : A) {
+            a = dis(gen);
         }
 
-        if (ss) {
-            aux = copiar_arreglo(A, TAM_ARREGLO);
-            cout << "Iniciando ordenamiento con SELECTION SORT... ";
-            tiempo = ordenar_selection_sort(aux, TAM_ARREGLO);
-            cout << "\tOrdenado. ";
-            cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-            t_prom_ss = t_prom_ss + tiempo.count();
-            delete [] aux;
-        }
+        std::vector<int> B(n);
+        std::chrono::steady_clock::time_point start, end;
+        std::chrono::duration<double> elapsed_seconds;
 
-        if (bs) {
-            aux = copiar_arreglo(A, TAM_ARREGLO);
-            cout << "Iniciando ordenamiento con BUBBLESORT... ";
-            tiempo = ordenar_bubblesort(aux, TAM_ARREGLO);
-            cout << "\tOrdenado. ";
-            cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-            t_prom_bs = t_prom_bs + tiempo.count();
-            delete [] aux;
-        }
+        // Insertion Sort
+        std::copy(A.begin(), A.end(), B.begin());
+        start = std::chrono::steady_clock::now();
+        insertion_sort(&B[0], B.size());
+        end = std::chrono::steady_clock::now();
+        elapsed_seconds = end - start;
+        archivo_salida << i + 1 << '\t' << elapsed_seconds.count() << '\t';
+        tiempos_insertion.push_back(elapsed_seconds.count());
 
-        delete [] A;
-        cout << endl;
+        // Selection Sort
+        std::copy(A.begin(), A.end(), B.begin());
+        start = std::chrono::steady_clock::now();
+        selection_sort(&B[0], B.size());
+        end = std::chrono::steady_clock::now();
+        elapsed_seconds = end - start;
+        archivo_salida << elapsed_seconds.count() << '\t';
+        tiempos_selection.push_back(elapsed_seconds.count());
+
+        // Bubble Sort
+        std::copy(A.begin(), A.end(), B.begin());
+        start = std::chrono::steady_clock::now();
+        bubblesort(&B[0], B.size());
+        end = std::chrono::steady_clock::now();
+        elapsed_seconds = end - start;
+        archivo_salida << elapsed_seconds.count() << '\t';
+        tiempos_bubble.push_back(elapsed_seconds.count());
+
+        // Merge Sort
+        std::copy(A.begin(), A.end(), B.begin());
+        start = std::chrono::steady_clock::now();
+        merge_sort(&B[0], 0, B.size() - 1);
+        end = std::chrono::steady_clock::now();
+        elapsed_seconds = end - start;
+        archivo_salida << elapsed_seconds.count() << '\t';
+        tiempos_merge.push_back(elapsed_seconds.count());
+
+        // Quick Sort
+        std::copy(A.begin(), A.end(), B.begin());
+        start = std::chrono::steady_clock::now();
+        quicksort(&B[0], 0, B.size() - 1);
+        end = std::chrono::steady_clock::now();
+        elapsed_seconds = end - start;
+        archivo_salida << elapsed_seconds.count() << '\n';
+        tiempos_quicksort.push_back(elapsed_seconds.count());
     }
-    t_prom_is = t_prom_is / REPETICIONES;
-    t_prom_ss = t_prom_ss / REPETICIONES;
-    t_prom_bs = t_prom_bs / REPETICIONES;
-    cout << "*** TIEMPO PROMEDIO ***" << endl;
-    if (is) {
-        cout << "Insertion sort:\t" << t_prom_is << endl;
-    }
-    if (ss) {
-        cout << "Selection sort:\t" << t_prom_ss << endl;
-    }
-    if (bs) {
-        cout << "Bubblesort:\t" << t_prom_bs << endl;
-    }
-}
 
+    // Calcular promedio y desviación estándar
+    auto calcular_promedio = [](const std::vector<double>& tiempos) {
+        double suma = std::accumulate(tiempos.begin(), tiempos.end(), 0.0);
+        return suma / tiempos.size();
+    };
 
-bool incluirAlgoritmo(string listaAlgs, char alg) {
-    size_t incluir = listaAlgs.find(alg);
-    return incluir != string::npos;
-}
+    auto calcular_desviacion_estandar = [&calcular_promedio](const std::vector<double>& tiempos, double promedio) {
+        double suma_cuadrados = std::accumulate(tiempos.begin(), tiempos.end(), 0.0, [promedio](double acum, double tiempo) {
+            return acum + std::pow(tiempo - promedio, 2);
+        });
+        return std::sqrt(suma_cuadrados / tiempos.size());
+    };
 
+    double promedio_insertion = calcular_promedio(tiempos_insertion);
+    double desviacion_insertion = calcular_desviacion_estandar(tiempos_insertion, promedio_insertion);
+    std::cout << "Promedio de Insertion sort: " << promedio_insertion << " segundos\n";
+    std::cout << "Desviación estándar de Insertion sort: " << desviacion_insertion << " segundos\n";
 
-int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        cout << "Sintaxis: ordenamiento_t <tamaño_arreglo> <repeticiones> <lista_algoritmos>" << endl;
-        cout << "Algoritmos:" << endl;
-        cout << "i: insertion sort" << endl;
-        cout << "s: selection sort" << endl;
-        cout << "b: bubblesort" << endl;
-    } else {
-        bool is = incluirAlgoritmo(argv[3], 'i');
-        bool ss = incluirAlgoritmo(argv[3], 's');
-        bool bs = incluirAlgoritmo(argv[3], 'b');
-        experimentos(atoi(argv[1]), atoi(argv[2]), is, ss, bs);
-    }
-    return EXIT_SUCCESS;
+    double promedio_selection = calcular_promedio(tiempos_selection);
+    double desviacion_selection = calcular_desviacion_estandar(tiempos_selection, promedio_selection);
+    std::cout << "Promedio de Selection sort: " << promedio_selection << " segundos\n";
+    std::cout << "Desviación estándar de Selection sort: " << desviacion_selection << " segundos\n";
+
+    double promedio_bubble = calcular_promedio(tiempos_bubble);
+    double desviacion_bubble = calcular_desviacion_estandar(tiempos_bubble, promedio_bubble);
+    std::cout << "Promedio de Bubble sort: " << promedio_bubble << " segundos\n";
+    std::cout << "Desviación estándar de Bubble sort: " << desviacion_bubble << " segundos\n";
+
+    double promedio_merge = calcular_promedio(tiempos_merge);
+    double desviacion_merge = calcular_desviacion_estandar(tiempos_merge, promedio_merge);
+    std::cout << "Promedio de Merge sort: " << promedio_merge << " segundos\n";
+    std::cout << "Desviación estándar de Merge sort: " << desviacion_merge << " segundos\n";
+
+    double promedio_quicksort = calcular_promedio(tiempos_quicksort);
+    double desviacion_quicksort = calcular_desviacion_estandar(tiempos_quicksort, promedio_quicksort);
+    std::cout << "Promedio de Quick sort: " << promedio_quicksort << " segundos\n";
+    std::cout << "Desviación estándar de Quick sort: " << desviacion_quicksort << " segundos\n";
+
+    // Agregamos la declaración de la variable end_program y calculamos el tiempo total del programa
+    auto end_program = std::chrono::steady_clock::now();
+    auto elapsed_program_seconds = std::chrono::duration_cast<std::chrono::seconds>(end_program - start_program);
+
+    // Imprimimos el tiempo total del programa
+    std::cout << "Tiempo total de ejecucion del programa: " << elapsed_program_seconds.count() << " segundos\n";
+
+    return 0;
 }
