@@ -1,160 +1,150 @@
 #include <iostream>
-#include <cstdlib>
-#include <string>
-#include <ctime>
+#include <vector>
 #include <chrono>
-
+#include <algorithm>
+#include <random>
+#include <cmath>
 #include "ordenamiento_t.h"
+#include "ordenamiento_rec_t.h"
 
-using namespace std;
-using namespace std::chrono;
+// Función para ejecutar un algoritmo de ordenamiento y medir su tiempo
+void ejecutar_algoritmo(std::vector<int>& A, std::vector<int>& B, char algoritmo, double& tiempo) {
+    // Usamos high_resolution_clock para medir el tiempo con mayor precisión
+    auto inicio = std::chrono::high_resolution_clock::now();
 
-
-duration<double> crear_arreglo(int *A, int TAM_ARREGLO, int RANGO_MAX) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    for (int i = 0; i < TAM_ARREGLO; i++) {
-        int x = rand() % RANGO_MAX;
-        A[i] = x;
+    // Seleccionamos el algoritmo de ordenamiento según la opción proporcionada
+    switch (algoritmo) {
+        case 'i':
+            insertion_sort(&B[0], B.size());
+            break;
+        case 's':
+            selection_sort(&B[0], B.size());
+            break;
+        case 'b':
+            bubblesort(&B[0], B.size());
+            break;
+        case 'm':
+            merge_sort(&B[0], 0, B.size() - 1);
+            break;
+        case 'q':
+            quicksort(&B[0], 0, B.size() - 1);
+            break;
+        default:
+            std::cerr << "Opción de algoritmo no válida.\n";
+            return;
     }
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
+
+    auto fin = std::chrono::high_resolution_clock::now();
+    // Calculamos el tiempo transcurrido en segundos
+    tiempo = std::chrono::duration<double>(fin - inicio).count();
 }
 
-
-duration<double> ordenar_insertion_sort(int* A, int TAM_ARREGLO) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    insertion_sort(A, TAM_ARREGLO);
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
-
-
-duration<double> ordenar_selection_sort(int* A, int TAM_ARREGLO) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    selection_sort(A, TAM_ARREGLO);
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
-
-
-duration<double> ordenar_bubblesort(int* A, int TAM_ARREGLO) {
-    high_resolution_clock::time_point inicio = high_resolution_clock::now();
-    bubblesort(A, TAM_ARREGLO);
-    high_resolution_clock::time_point fin = high_resolution_clock::now();
-    duration<double> tiempo = duration_cast<duration<double> >(fin - inicio);
-    return tiempo;
-}
-
-
-int* copiar_arreglo(int A[], int n) {
-    int *aux = new int[n];
-    for (int i = 0; i < n; i++) {
-        aux[i] = A[i];
+int main(int argc, char *argv[]) {
+    // Verificamos que se proporcionen los argumentos correctos
+    if (argc != 3) {
+        std::cout << "Uso: " << argv[0] << " <n> <m>\n";
+        return 1;
     }
-    return aux;
-}
 
+    // Convertimos los argumentos a enteros
+    int n = std::stoi(argv[1]);  // Tamaño del arreglo
+    int m = std::stoi(argv[2]);  // Número de repeticiones
 
-void mostrar_arreglo(int *A, int n) {
-    for (int i = 0; i < n; i++) {
-        cout << A[i] << " ";
-    }
-    cout << endl;
-}
+    // Configuramos el generador de números aleatorios
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, 10 * n);
 
+    // Variables para almacenar los tiempos
+    double total_time_insertion = 0, total_time_selection = 0, total_time_bubble = 0,
+           total_time_merge = 0, total_time_quick = 0;
+    double total_time_insertion_sq = 0, total_time_selection_sq = 0, total_time_bubble_sq = 0,
+           total_time_merge_sq = 0, total_time_quick_sq = 0;
 
-void experimentos(int tam, int reps, bool is, bool ss, bool bs) {
+    // Imprimimos información sobre el tamaño del arreglo y el número de repeticiones
+    std::cout << "Tamaño del arreglo: " << n << "\n";
+    std::cout << "Número de repeticiones: " << m << "\n";
 
-    int TAM_ARREGLO = tam;
-    int RANGO_MAX = 10 * TAM_ARREGLO;
-    int REPETICIONES = reps;
-    double t_prom_is = 0.0;
-    double t_prom_ss = 0.0;
-    double t_prom_bs = 0.0;
-
-    srand((unsigned) time(0));
-    for (int i = 0; i < REPETICIONES; i++) {
-        cout << "*** REPETICION " << i+1 << " ***" << endl;
-        int *A = new int[TAM_ARREGLO];
-        duration<double> tiempo;
-
-        // Arreglo aleatorio
-        cout << "Creando arreglo aleatorio de tamaño " << TAM_ARREGLO << "... ";
-        tiempo = crear_arreglo(A, TAM_ARREGLO, RANGO_MAX);
-        cout << "\tCreado. ";
-        cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-
-        int *aux;
-        if (is) {
-            aux = copiar_arreglo(A, TAM_ARREGLO);
-            cout << "Iniciando ordenamiento con INSERTION SORT... ";
-            tiempo = ordenar_insertion_sort(aux, TAM_ARREGLO);
-            cout << "\tOrdenado. ";
-            cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-            t_prom_is = t_prom_is + tiempo.count();
-            delete [] aux;
+    // Bucle para ejecutar los algoritmos m veces
+    for (int i = 0; i < m; i++) {
+        // Crear un nuevo arreglo aleatorio
+        std::vector<int> A(n);
+        for (int &a : A) {
+            a = dis(gen);
         }
 
-        if (ss) {
-            aux = copiar_arreglo(A, TAM_ARREGLO);
-            cout << "Iniciando ordenamiento con SELECTION SORT... ";
-            tiempo = ordenar_selection_sort(aux, TAM_ARREGLO);
-            cout << "\tOrdenado. ";
-            cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-            t_prom_ss = t_prom_ss + tiempo.count();
-            delete [] aux;
-        }
+        // Variables para almacenar el tiempo de cada algoritmo en esta ejecución
+        double tiempo_insertion, tiempo_selection, tiempo_bubble, tiempo_merge, tiempo_quick;
 
-        if (bs) {
-            aux = copiar_arreglo(A, TAM_ARREGLO);
-            cout << "Iniciando ordenamiento con BUBBLESORT... ";
-            tiempo = ordenar_bubblesort(aux, TAM_ARREGLO);
-            cout << "\tOrdenado. ";
-            cout << "\tTiempo: " << tiempo.count() << "s" << endl;
-            t_prom_bs = t_prom_bs + tiempo.count();
-            delete [] aux;
-        }
+        // Copiar el arreglo original para que todos los algoritmos ordenen el mismo conjunto
+        std::vector<int> B(A);
 
-        delete [] A;
-        cout << endl;
+        // Ejecutar cada algoritmo y medir el tiempo
+        ejecutar_algoritmo(A, B, 'i', tiempo_insertion);
+        ejecutar_algoritmo(A, B, 's', tiempo_selection);
+        ejecutar_algoritmo(A, B, 'b', tiempo_bubble);
+        ejecutar_algoritmo(A, B, 'm', tiempo_merge);
+        ejecutar_algoritmo(A, B, 'q', tiempo_quick);
+
+        // Acumular los tiempos para calcular el promedio y la desviación estándar después
+        total_time_insertion += tiempo_insertion;
+        total_time_insertion_sq += tiempo_insertion * tiempo_insertion;
+
+        total_time_selection += tiempo_selection;
+        total_time_selection_sq += tiempo_selection * tiempo_selection;
+
+        total_time_bubble += tiempo_bubble;
+        total_time_bubble_sq += tiempo_bubble * tiempo_bubble;
+
+        total_time_merge += tiempo_merge;
+        total_time_merge_sq += tiempo_merge * tiempo_merge;
+
+        total_time_quick += tiempo_quick;
+        total_time_quick_sq += tiempo_quick * tiempo_quick;
+
+        // Imprimir información sobre la ejecución actual
+        std::cout << "** Arreglo No. " << i + 1 << " **\n";
+        std::cout << "Creando arreglo de tamaño " << n << "\n";
+
+        // Imprimir información sobre cada algoritmo
+        std::cout << "Iniciando ordenamiento con INSERTION SORT... Ordenando... Tiempo: " << tiempo_insertion << " segundos\n";
+        std::cout << "Iniciando ordenamiento con SELECTION SORT... Ordenando... Tiempo: " << tiempo_selection << " segundos\n";
+        std::cout << "Iniciando ordenamiento con BUBBLE SORT... Ordenando... Tiempo: " << tiempo_bubble << " segundos\n";
+        std::cout << "Iniciando ordenamiento con MERGE SORT... Ordenando... Tiempo: " << tiempo_merge << " segundos\n";
+        std::cout << "Iniciando ordenamiento con QUICKSORT... Ordenando... Tiempo: " << tiempo_quick << " segundos\n";
     }
-    t_prom_is = t_prom_is / REPETICIONES;
-    t_prom_ss = t_prom_ss / REPETICIONES;
-    t_prom_bs = t_prom_bs / REPETICIONES;
-    cout << "*** TIEMPO PROMEDIO ***" << endl;
-    if (is) {
-        cout << "Insertion sort:\t" << t_prom_is << endl;
-    }
-    if (ss) {
-        cout << "Selection sort:\t" << t_prom_ss << endl;
-    }
-    if (bs) {
-        cout << "Bubblesort:\t" << t_prom_bs << endl;
-    }
+
+    // Calcular promedio y desviación estándar para cada algoritmo
+    double avg_time_insertion = total_time_insertion / m;
+    double stddev_time_insertion = std::sqrt(total_time_insertion_sq / m - avg_time_insertion * avg_time_insertion);
+
+    double avg_time_selection = total_time_selection / m;
+    double stddev_time_selection = std::sqrt(total_time_selection_sq / m - avg_time_selection * avg_time_selection);
+
+    double avg_time_bubble = total_time_bubble / m;
+    double stddev_time_bubble = std::sqrt(total_time_bubble_sq / m - avg_time_bubble * avg_time_bubble);
+
+    double avg_time_merge = total_time_merge / m;
+    double stddev_time_merge = std::sqrt(total_time_merge_sq / m - avg_time_merge * avg_time_merge);
+
+    double avg_time_quick = total_time_quick / m;
+    double stddev_time_quick = std::sqrt(total_time_quick_sq / m - avg_time_quick * avg_time_quick);
+
+    // Imprimir información sobre promedio y desviación estándar
+    std::cout << "\nPromedio de tiempos:\n";
+    std::cout << "Insertion sort: " << avg_time_insertion << " segundos\n";
+    std::cout << "Selection sort: " << avg_time_selection << " segundos\n";
+    std::cout << "Bubble sort: " << avg_time_bubble << " segundos\n";
+    std::cout << "Merge sort: " << avg_time_merge << " segundos\n";
+    std::cout << "Quick sort: " << avg_time_quick << " segundos\n";
+
+    std::cout << "\nDesviación estándar de tiempos:\n";
+    std::cout << "Insertion sort: " << stddev_time_insertion << " segundos\n";
+    std::cout << "Selection sort: " << stddev_time_selection << " segundos\n";
+    std::cout << "Bubble sort: " << stddev_time_bubble << " segundos\n";
+    std::cout << "Merge sort: " << stddev_time_merge << " segundos\n";
+    std::cout << "Quick sort: " << stddev_time_quick << " segundos\n";
+
+    return 0;
 }
 
-
-bool incluirAlgoritmo(string listaAlgs, char alg) {
-    size_t incluir = listaAlgs.find(alg);
-    return incluir != string::npos;
-}
-
-
-int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        cout << "Sintaxis: ordenamiento_t <tamaño_arreglo> <repeticiones> <lista_algoritmos>" << endl;
-        cout << "Algoritmos:" << endl;
-        cout << "i: insertion sort" << endl;
-        cout << "s: selection sort" << endl;
-        cout << "b: bubblesort" << endl;
-    } else {
-        bool is = incluirAlgoritmo(argv[3], 'i');
-        bool ss = incluirAlgoritmo(argv[3], 's');
-        bool bs = incluirAlgoritmo(argv[3], 'b');
-        experimentos(atoi(argv[1]), atoi(argv[2]), is, ss, bs);
-    }
-    return EXIT_SUCCESS;
-}
